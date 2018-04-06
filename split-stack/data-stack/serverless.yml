@@ -1,0 +1,34 @@
+service: data-stack
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: ${opt:stage, 'dev'} # make sure this is same in all stacks. ここは全スタック同じにするように。
+
+custom:
+  # custom strings. カスタム文字列
+  hogeTableName: ${self:service}-hoge-${self:provider.stage}
+
+resources:
+  Resources:
+    # table definition of DynamoDB. DynamoDBのテーブル定義
+    DynamoDbHogeTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: ${self:custom.hogeTableName}
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+  Outputs:
+    # output values of this stack that can be referred to from other stacks. 出力値（別スタックから参照可能）
+    DynamoDBHogeTableName:
+      Value: ${self:custom.hogeTableName}

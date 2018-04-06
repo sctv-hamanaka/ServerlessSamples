@@ -1,0 +1,37 @@
+service: lambda-stack
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: ${opt:stage, 'dev'}
+
+  iamRoleStatements:
+    # permission for dynamodb. DynamoDBのアクセス権追加
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:custom.dynamoDBHogeTableName}"
+  environment:
+    DYNAMODB_HOGE_TABLE_NAME: ${self:custom.dynamoDBHogeTableName}
+
+custom:
+  # service name of other(data) stack. 別スタックのservice名
+  dataStackName: data-stack
+  # name of CloudFormation of other stack. 別スタックのCloudFormation名
+  dataCfName: ${self:custom.dataStackName}-${self:provider.stage}
+  # reference other stack's output value. データスタックの出力値を参照する
+  dynamoDBHogeTableName: ${cf:${self:custom.dataCfName}.DynamoDBHogeTableName}
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
